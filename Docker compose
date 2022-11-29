@@ -1,0 +1,237 @@
+version: '3.3'
+
+services:
+  uptime-kuma:
+    image: louislam/uptime-kuma:1
+    container_name: uptime-kuma
+    volumes:
+      - /opt/uptime-kuma/uptime-kuma-data:/app/data
+    ports:
+      - 127.0.0.1:30005:3001  # <Host Port>:<Container Port>
+    restart: unless-stopped
+
+version: '3.5'
+
+# Config options can optionally set, by using the environment field.
+# e.g:
+#   environment:
+#     DASHDOT_ENABLE_CPU_TEMPS: "true"
+
+services:
+  dash:
+    image: mauricenino/dashdot:latest
+    container_name: dash
+    restart: unless-stopped
+    privileged: true
+    ports:
+      - 127.0.0.1:30006:3001
+    volumes:
+      - /etc/os-release:/etc/os-release:ro
+      - /proc/1/ns/net:/mnt/host_ns_net:ro
+      - /media:/mnt/host_media:ro
+      - /mnt:/mnt/host_mnt:ro
+
+---
+version: "2.1"
+services:
+  calibre-web:
+    image: lscr.io/linuxserver/calibre-web:latest
+    container_name: calibre-web
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/New_York
+      - DOCKER_MODS=linuxserver/calibre-web:calibre #optional
+      #- OAUTHLIB_RELAX_TOKEN_SCOPE=1 #optional
+    volumes:
+      - /opt/calibre-web/config:/config
+      - /opt/calibre-web/books:/books
+    ports:
+      - 127.0.0.1:30007:8083
+    restart: unless-stopped
+
+---
+version: "2.1"
+services:
+  calibre:
+    image: lscr.io/linuxserver/calibre:latest
+    container_name: calibre
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/New_York
+      #- PASSWORD= #optional
+      #- CLI_ARGS= #optional
+    volumes:
+      - /opt/calibre/config:/config
+    ports:
+      - 30008:8080
+      - 30009:8081
+    restart: unless-stopped
+
+---
+version: '3.3'
+services:
+  komga:
+    image: gotson/komga
+    container_name: komga
+    volumes:
+      - /opt/komga/config:/config
+      - /opt/komga/data:/data
+      - /opt/komga/manga:/manga
+    ports:
+      - 127.0.0.1:30010:8080
+    # remove the whole environment section if you don't need it
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/New_York
+    restart: unless-stopped
+
+version: '3.3'
+
+services:
+  authelia:
+    image: authelia/authelia
+    container_name: authelia
+    volumes:
+      - /opt/Authelia/config:/config #change this to a shared folder on your system. DO NOT use a "volume"
+    ports:
+      - 127.0.0.1:9091:9091
+    environment:
+      - TZ=America/New_York
+    restart: unless-stopped
+
+version: '3'
+services:
+  netdata:
+    image: netdata/netdata
+    container_name: netdata
+    hostname: ubuntu-docker # set to fqdn of host
+    ports:
+      - 127.0.0.1:30012:19999
+    restart: unless-stopped
+    cap_add:
+      - SYS_PTRACE
+    security_opt:
+      - apparmor:unconfined
+    volumes:
+      - netdataconfig:/etc/netdata
+      - netdatalib:/var/lib/netdata
+      - netdatacache:/var/cache/netdata
+      #- /etc/passwd:/host/etc/passwd:ro
+      #- /etc/group:/host/etc/group:ro
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /etc/os-release:/etc/os-release:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
+volumes:
+  netdataconfig:
+  netdatalib:
+  netdatacache:
+
+version: "3"
+services:
+  watchtower:
+    image: containrrr/watchtower
+    container_name: watchtower
+    environment:
+      - TZ=America/New_York
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+version: "3"
+services:
+  dozzle:
+    container_name: dozzle
+    image: amir20/dozzle:latest
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - 127.0.0.1:9999:8080
+    restart: unless-stopped
+
+version: "3"
+
+services:
+  cloudflare-ddns:
+    image: joshava/cloudflare-ddns
+
+    restart: unless-stopped
+    volumes:
+      # attach a directory relative to the directory containing this compose file
+      - /opt/cloudflare-ddns/config/:/app/config.yaml
+
+---
+version: "2.1"
+services:
+  ddclient:
+    image: lscr.io/linuxserver/ddclient:latest
+    container_name: ddclient
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/New_York
+    volumes:
+      - /opt/ddclient/config:/config
+    restart: unless-stopped
+
+---
+version: "2.1"
+services:
+  heimdall:
+    image: lscr.io/linuxserver/heimdall:latest
+    container_name: heimdall
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/New_York
+    volumes:
+      - /opt/heimdall/config:/config
+    ports:
+      - 30001:80
+      - 30002:443
+    restart: unless-stopped
+
+---
+version: "2.1"
+services:
+  pyload-ng:
+    image: lscr.io/linuxserver/pyload-ng:latest
+    container_name: pyload-ng
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/New_York
+    volumes:
+      - /opt/pyload/config:/config
+      - /opt/pyload/downloads:/downloads
+    ports:
+      - 127.0.0.1:30003:8000
+      #- 9666:9666 #optional
+    restart: unless-stopped
+
+---
+version: "2.1"
+services:
+  librespeed:
+    image: lscr.io/linuxserver/librespeed:latest
+    container_name: librespeed
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/New_York
+      - PASSWORD=QW*x#t^5#AAH&Bjq
+      #- CUSTOM_RESULTS=false #optional
+      #- DB_TYPE=sqlite #optional
+      #- DB_NAME=DB_NAME #optional
+      #- DB_HOSTNAME=DB_HOSTNAME #optional
+      #- DB_USERNAME=DB_USERNAME #optional
+      #- DB_PASSWORD=DB_PASSWORD #optional
+      #- DB_PORT=DB_PORT #optional
+    volumes:
+      - /opt/librespeed/config:/config
+    ports:
+      - 127.0.0.1:30004:80
+    restart: unless-stopped
