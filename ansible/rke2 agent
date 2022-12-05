@@ -1,0 +1,58 @@
+---
+
+- hosts: new-rke2-agent
+  become: yes
+  become_user: root
+  tasks:
+
+  - name: update/upgrade
+    tags: upgrade
+    apt:
+     update_cache: yes
+     upgrade: yes
+
+  - name: enable bridging in sysctl.conf
+    tags: enable_bridging
+    become: yes
+    become_user: root
+    lineinfile:
+     path: /etc/sysctl.conf
+     regexp: '#net.ipv4.ip_forward=1'
+     line: 'net.ipv4.ip_forward=1'
+     state: present
+     backup: yes
+
+  - name: install nfs-common
+    tags: nfs-common
+    become: yes
+    become_user: root
+    apt:
+     name: nfs-common
+     state: latest
+
+  - name: sed token
+    tags: sed_token,sed
+    become: yes
+    become_user: root
+    shell: sed -i '1 a\ - K1014a9a0367c097ef7f1966bfea34a06d50c5a7b4a31b08bb09f867a430ace703f::server:72fa042bf92b1ca6700e330453df680f' /etc/rancher/rke2/config.yaml
+
+  - name: sed server
+    tags: sed_server,sed
+    become: yes
+    become_user: root
+    shell: sed -i '3 a\ - https://rancher.rke2.ashahbaz.com:9345' /etc/rancher/rke2/config.yaml
+
+  - name: download rke2-agent
+    tags: curl_agent,agent
+    become: yes
+    become_user: root
+    shell: curl -sfL https://get.rke2.io | INSTALL_RKE2_TYPE=agent sh -
+
+  - name: enable rke2 agent
+    tags: start_rke2
+    become: yes
+    become_user: root
+    service:
+     name: rke2-agent.service
+     state: started
+     enabled: yes
